@@ -11,25 +11,25 @@ The application is built using **FastAPI**, **SQLAlchemy**, and **SQLite**, and 
 
 ## Features
 
-* CRUD operations for travel projects
-* Manage places inside projects (add, update, list, retrieve)
-* Validation of places using the Art Institute of Chicago API
-* Automatic project completion when all project places are marked as visited
-* Prevent deletion of projects that contain visited places
-* Limit of maximum 10 places per project
-* Docker support
-* Postman collection included
+- CRUD operations for travel projects
+- Manage places inside projects (add, update, list, retrieve)
+- Validation of places using the Art Institute of Chicago API
+- Automatic project completion when all project places are marked as visited
+- Prevent deletion of projects that contain visited places
+- Limit of maximum 10 places per project
+- Docker support
+- Postman collection included
 
 ---
 
 ## Tech Stack
 
-* Python 3.10
-* FastAPI
-* SQLAlchemy
-* SQLite
-* HTTPX (third-party API integration)
-* Docker
+- Python 3.10
+- FastAPI
+- SQLAlchemy
+- SQLite
+- HTTPX (third-party API integration)
+- Docker
 
 ---
 
@@ -81,28 +81,28 @@ docker run -p 8000:8000 travel-planner
 
 ### Projects
 
-* `POST /projects/` — create project (with optional places)
-* `GET /projects/` — list projects
-* `GET /projects/{project_id}` — get project
-* `PATCH /projects/{project_id}` — update project
-* `DELETE /projects/{project_id}` — delete project
+- `POST /projects/` — create project (with optional places)
+- `GET /projects/` — list projects
+- `GET /projects/{project_id}` — get project
+- `PATCH /projects/{project_id}` — update project
+- `DELETE /projects/{project_id}` — delete project
 
 ### Places (nested)
 
-* `POST /projects/{project_id}/places` — add place
-* `GET /projects/{project_id}/places` — list project places
-* `GET /projects/{project_id}/places/{place_id}` — get place
-* `PATCH /projects/{project_id}/places/{place_id}` — update notes / mark visited
+- `POST /projects/{project_id}/places` — add place
+- `GET /projects/{project_id}/places` — list project places
+- `GET /projects/{project_id}/places/{place_id}` — get place
+- `PATCH /projects/{project_id}/places/{place_id}` — update notes / mark visited
 
 ---
 
 ## Business Rules
 
-* A project must contain **1–10 places**
-* Duplicate places inside the same project are not allowed
-* A place must exist in the Art Institute API before being added
-* A project cannot be deleted if any place has been marked as visited
-* When all places in a project are marked as visited, the project is automatically marked as **completed**
+- A project must contain **1–10 places**
+- Duplicate places inside the same project are not allowed
+- A place must exist in the Art Institute API before being added
+- A project cannot be deleted if any place has been marked as visited
+- When all places in a project are marked as visited, the project is automatically marked as **completed**
 
 ---
 
