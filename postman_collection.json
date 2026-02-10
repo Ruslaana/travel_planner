@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "Travel Planner API",
+    "_postman_id": "c7d36b5c-7f7c-4b80-a01c-0a1c2b52d1a2",
+    "description": "CRUD for projects and places. Base URL: {{base_url}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "project_id", "value": "1" },
+    { "key": "place_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "POST /projects (create)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Italy\",\n  \"description\": \"Go to Italy for the weekend\",\n  \"start_date\": \"2026-02-10\",\n  \"places\": [129884]\n}"
+            },
+            "url": "{{base_url}}/projects/"
+          }
+        },
+        {
+          "name": "GET /projects (list)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/projects/"
+          }
+        },
+        {
+          "name": "GET /projects/:project_id (single)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/projects/{{project_id}}"
+          }
+        },
+        {
+          "name": "PATCH /projects/:project_id (update)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Italy trip (updated)\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": "{{base_url}}/projects/{{project_id}}"
+          }
+        },
+        {
+          "name": "DELETE /projects/:project_id (delete)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/projects/{{project_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Places (nested under project)",
+      "item": [
+        {
+          "name": "POST /projects/:project_id/places (add)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"external_id\": 129884\n}" },
+            "url": "{{base_url}}/projects/{{project_id}}/places"
+          }
+        },
+        {
+          "name": "GET /projects/:project_id/places (list)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/projects/{{project_id}}/places"
+          }
+        },
+        {
+          "name": "GET /projects/:project_id/places/:place_id (single)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/projects/{{project_id}}/places/{{place_id}}"
+          }
+        },
+        {
+          "name": "PATCH /projects/:project_id/places/:place_id (update notes/visited)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Tickets bought\",\n  \"visited\": true\n}"
+            },
+            "url": "{{base_url}}/projects/{{project_id}}/places/{{place_id}}"
+          }
+        }
+      ]
+    }
+  ]
+}
