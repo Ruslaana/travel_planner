@@ -1,31 +1,43 @@
+from __future__ import annotations
+
+import asyncio
 import time
-import httpx
 from typing import Optional
+
+import httpx
 
 BASE_URL = "https://api.artic.edu/api/v1/artworks"
 
+TTL_SECONDS = 300  # 5 min
+
 _CACHE: dict[int, tuple[float, Optional[dict]]] = {}
-TTL_SECONDS = 300  
+_CACHE_LOCK = asyncio.Lock()
 
 
-def _cache_get(external_id: int) -> Optional[dict]:
-    item = _CACHE.get(external_id)
-    if not item:
-        return None
-    expires_at, value = item
-    if time.time() > expires_at:
-        _CACHE.pop(external_id, None)
-        return None
-    return value
+def _is_expired(expires_at: float) -> bool:
+    return time.time() > expires_at
 
 
-def _cache_set(external_id: int, value: Optional[dict]) -> None:
-    _CACHE[external_id] = (time.time() + TTL_SECONDS, value)
+async def _cache_get(external_id: int) -> Optional[dict] | None:
+    async with _CACHE_LOCK:
+        item = _CACHE.get(external_id)
+        if not item:
+            return None
+        expires_at, value = item
+        if _is_expired(expires_at):
+            _CACHE.pop(external_id, None)
+            return None
+        return value
 
 
-def get_artwork(external_id: int) -> dict | None:
+async def _cache_set(external_id: int, value: Optional[dict]) -> None:
+    async with _CACHE_LOCK:
+        _CACHE[external_id] = (time.time() + TTL_SECONDS, value)
+
+
+async def get_artwork_async(external_id: int, client: httpx.AsyncClient) -> dict | None:
     try:
-        resp = httpx.get(f"{BASE_URL}/{external_id}", timeout=5.0)
+        resp = await client.get(f"{BASE_URL}/{external_id}", timeout=5.0)
     except httpx.RequestError:
         return None
 
@@ -33,23 +45,24 @@ def get_artwork(external_id: int) -> dict | None:
         return None
 
     payload = resp.json()
-    data = payload.get("data")
-    return data or None
+    return payload.get("data") or None
 
 
-def get_artwork_cached(external_id: int) -> dict | None:
-    cached = _cache_get(external_id)
+async def get_artwork_cached_async(external_id: int, client: httpx.AsyncClient) -> dict | None:
+    cached = await _cache_get(external_id)
     if cached is not None:
         return cached
 
-    data = get_artwork(external_id)
-    _cache_set(external_id, data)
+    data = await get_artwork_async(external_id, client)
+    await _cache_set(external_id, data)
     return data
 
 
-def validate_artworks_exist(external_ids: list[int]) -> list[int]:
-    missing: list[int] = []
-    for eid in external_ids:
-        if not get_artwork_cached(eid):
-            missing.append(eid)
+async def validate_artworks_exist_async(external_ids: list[int]) -> list[int]:
+    """Return list of missing IDs. Validates concurrently + uses TTL cache."""
+    async with httpx.AsyncClient() as client:
+        tasks = [get_artwork_cached_async(eid, client) for eid in external_ids]
+        results = await asyncio.gather(*tasks)
+
+    missing = [eid for eid, data in zip(external_ids, results) if not data]
     return missing

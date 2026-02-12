@@ -49,7 +49,6 @@ def update_project_completion(db: Session, project_id: int) -> None:
         .first()
     )
     project.completed = (has_unvisited is None)
-    db.commit()
 
 
 
