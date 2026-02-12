@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from services.db import get_db
-from services import crud
+from services.travel_service import TravelService
 from schemas import schemas
-from models import models
-from services.artic_client import get_artwork
+from services import crud
 
 
 router = APIRouter()
@@ -13,43 +12,13 @@ router = APIRouter()
 
 @router.post("/", response_model=schemas.ProjectOut, status_code=201)
 def create_project(payload: schemas.ProjectCreate, db: Session = Depends(get_db)):
-
-    if len(payload.places) != len(set(payload.places)):
-        raise HTTPException(status_code=409, detail="Duplicate places are not allowed")
-
-    missing = []
-    for external_id in payload.places:
-        if not get_artwork(external_id):
-            missing.append(external_id)
-
-    if missing:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Artwork(s) not found in Art Institute API: {missing}",
-        )
-
-    try:
-        project = models.Project(
-            name=payload.name,
-            description=payload.description,
-            start_date=payload.start_date,
-            completed=False,
-        )
-        db.add(project)
-        db.flush()
-
-        for external_id in payload.places:
-            db.add(models.ProjectPlace(project_id=project.id, external_id=external_id))
-
-        db.commit()
-        db.refresh(project)
-        return project
-
-    except Exception:
-        db.rollback()
-        raise
-
-
+    service = TravelService(db)
+    return service.create_project_with_places(
+        name=payload.name,
+        description=payload.description,
+        start_date=payload.start_date,
+        places=payload.places,
+    )
 
 @router.get("/", response_model=list[schemas.ProjectOut])
 def list_projects(db: Session = Depends(get_db)):
@@ -88,11 +57,11 @@ def delete_project(project_id: int, db: Session = Depends(get_db)):
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    visited = crud.project_has_visited_places(db, project_id)
-    if visited:
+    if crud.project_has_visited_places(db, project_id):
         raise HTTPException(
             status_code=409,
             detail="Project cannot be deleted because it has visited places",
         )
 
     crud.delete_project(db, project)
+    return None
